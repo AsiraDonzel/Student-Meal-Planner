@@ -1,0 +1,60 @@
+/* ── AUTHENTICATION STYLES ── */
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--bg-primary);
+  background-image: radial-gradient(circle at top right, var(--accent-bg) 0%, transparent 40%),
+                    radial-gradient(circle at bottom left, var(--blue-bg) 0%, transparent 40%);
+}
+
+.auth-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-logo {
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 32px;
+}
+
+.auth-btn {
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+.auth-switch {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.slide-in {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); height: 0; overflow: hidden; margin: 0; padding: 0; }
+  to { opacity: 1; transform: translateY(0); height: auto; }
+}

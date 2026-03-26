@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Meal Planner – Smart Budget Dining</title>
+  <meta name="description" content="AI-powered meal planner that helps students eat healthy on a budget. Get personalized meal recommendations based on your campus food options and monthly allowance." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+
+  <!-- ───────── APP LOCK SCREEN (Master Password) ───────── -->
+  <div id="app-lock-screen" class="modal-overlay hidden" style="z-index: 20000; background: var(--bg-primary);">
+    <div class="auth-card" style="box-shadow: none; background: transparent;">
+      <div class="logo auth-logo">
+        <div class="logo-icon"><i data-lucide="shield-check"></i></div>
+        <div>
+          <h1 id="lock-title">App Securely Locked</h1>
+          <p class="tagline" id="lock-subtitle">Enter your master password to decrypt data</p>
+        </div>
+      </div>
+      
+      <form id="master-password-form" class="form-group" style="margin-top: 24px;">
+        <input type="password" id="master-password-input" required placeholder="Master Password" />
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 16px;">
+          <i data-lucide="unlock"></i> <span id="master-unlock-text">Unlock Application</span>
+        </button>
+        <p id="master-lock-error" class="error-msg hidden" style="margin-top:12px; text-align:center;">⚠️ Incorrect Password. Try again.</p>
+      </form>
+
+      <div id="master-setup-info" class="hidden" style="margin-top: 24px; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
+        <p>This password encrypts your budget data and food items in your browser. <br/><strong>If lost, your data cannot be recovered.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── AUTHENTICATION SCREEN ───────── -->
+  <div id="auth-container" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="logo auth-logo">
+        <div class="logo-icon"><i data-lucide="utensils-crossed"></i></div>
+        <div>
+          <h1>Student Meal Planner</h1>
+          <span class="tagline">Smart meals. Smart budget.</span>
+        </div>
+      </div>
+      <p class="auth-subtitle">Sign in to manage your budget and get AI meal plans.</p>
+
+      <form id="auth-form">
+        <div class="form-group slide-in hidden" id="register-fields">
+          <label for="auth-name">Full Name</label>
+          <input type="text" id="auth-name" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" required placeholder="name@school.edu" />
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" required placeholder="••••••••" minlength="6" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full auth-btn">
+          <i data-lucide="log-in" id="auth-btn-icon"></i> <span id="auth-submit-text">Sign In</span>
+        </button>
+      </form>
+      
+      <div class="auth-switch">
+        <span id="auth-switch-text">Don't have an account?</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="auth-switch-btn">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── MAIN APPLICATION ───────── -->
+  <div id="app-container" class="hidden">
+    <!-- ───────── HEADER ───────── -->
+    <header class="app-header">
+      <div class="header-inner container">
+        <div class="logo">
+          <div class="logo-icon"><i data-lucide="utensils-crossed"></i></div>
+          <div>
+            <h1>Student Meal Planner</h1>
+            <span class="tagline">Smart meals. Smart budget.</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+            <i data-lucide="sun" class="theme-icon-light"></i>
+            <i data-lucide="moon" class="theme-icon-dark"></i>
+          </button>
+          <button id="settings-btn" class="icon-btn" aria-label="Settings">
+            <i data-lucide="settings"></i>
+          </button>
+          <div id="profile-trigger" class="profile-circle">
+            <span id="nav-profile-initial">S</span>
+          </div>
+          <button id="logout-btn" class="icon-btn login-icon" title="Logout">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ───────── MAIN ───────── -->
+    <main class="container">
+
+    <!-- ── MAIN VIEW (Dashboard, AI, History) ── -->
+    <div id="main-view">
+      
+    <!-- ── BUDGET DASHBOARD ── -->
+    <section id="dashboard" class="section">
+      <div class="section-title">
+        <i data-lucide="layout-dashboard"></i>
+        <div>
+          <h2 id="welcome-message">Dashboard</h2>
+          <p class="tagline" style="margin-top: 1px;">Welcome back, <span id="user-display-name">Student</span>!</p>
+        </div>
+      </div>
+
+      <!-- ── LOW BUDGET ALERT ── -->
+      <div id="budget-warning" class="hidden alert alert-warning" style="margin-bottom: 24px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <i data-lucide="alert-triangle" style="color:var(--orange);"></i>
+          <div>
+            <p style="font-weight:600; margin-bottom:2px;">Budget is getting low!</p>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">Try using your <strong>Staple Items</strong> (Garri, Cereal) for meals to stretch your remaining ₦<span id="warning-budget-left">0</span>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Staple Items Card -->
+        <div class="card" style="grid-column: 1 / -1; margin-bottom: 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin-bottom:0; font-size: 1rem;"><i data-lucide="package" style="color:var(--accent); margin-right:8px; width: 18px; height: 18px;"></i>Staples I Have at Home</h3>
+            <div class="tooltip-container">
+              <i data-lucide="help-circle" style="width:16px; height:16px; color:var(--text-muted); cursor:help;"></i>
+              <span class="tooltip-text">Items you already own are treated as ₦0 cost in AI meal plans.</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:16px; margin-top:8px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 140px; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-tertiary); border-radius:var(--radius-sm); border: 1px solid var(--border);">
+              <label for="staple-garri" style="font-size:0.85rem; cursor:pointer;">☑️ Soaked Garri</label>
+              <input type="checkbox" id="staple-garri" class="staple-toggle" style="width:18px; height:18px; accent-color:var(--accent);">
+            </div>
+            <div style="flex: 1; min-width: 140px; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-tertiary); border-radius:var(--radius-sm); border: 1px solid var(--border);">
+              <label for="staple-cereal" style="font-size:0.85rem; cursor:pointer;">🥣 Cereal (Cornflakes/Oats)</label>
+              <input type="checkbox" id="staple-cereal" class="staple-toggle" style="width:18px; height:18px; accent-color:var(--accent);">
+            </div>
+          </div>
+        </div>
+        <!-- Remaining Budget -->
+        <div class="card card-stat card-remaining">
+          <div class="card-label"><i data-lucide="banknote"></i> Spending Budget</div>
+          <p class="stat" id="remaining-display">₦0</p>
+          <span class="stat-sub">allowance − savings</span>
+        </div>
+
+        <!-- Daily Budget -->
+        <div class="card card-stat card-daily">
+          <div class="card-label"><i data-lucide="calendar-days"></i> Baseline Daily Limit</div>
+          <p class="stat" id="daily-display">₦0</p>
+          <span class="stat-sub">full period average</span>
+        </div>
+
+        <!-- Snapshot Widget -->
+        <div class="card card-stat" style="grid-column: 1 / -1; display: flex; gap: 16px; align-items: center; justify-content: space-between; overflow: hidden;">
+          <div>
+            <div class="card-label"><i data-lucide="pie-chart"></i> Quick Budget Snapshot</div>
+            <p class="stat" id="snapshot-remaining" style="margin-bottom: 2px;">₦0 left</p>
+            <span class="stat-sub"><b id="snapshot-days">--</b> days left • Avg <b id="snapshot-avg">--</b> / day</span>
+            <div style="margin-top:12px;">
+              <button id="snapshot-reset" class="btn btn-ghost btn-sm" style="color:var(--red);">Reset Spending History</button>
+            </div>
+          </div>
+          <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+            <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--bg-tertiary)" stroke-width="4"></path>
+              <path id="snapshot-gauge" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--green)" stroke-width="4" stroke-dasharray="0, 100" style="transition: stroke-dasharray 0.5s ease;"></path>
+            </svg>
+            <div id="snapshot-percent" style="position: absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; color:var(--text-primary);">0%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Food Section moved to settings-view -->
+
+    <!-- ── AI RECOMMENDATION ── -->
+    <section id="ai-section" class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <i data-lucide="sparkles"></i>
+          <h2>AI Meal Planner</h2>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button id="clear-plan-btn" class="btn btn-ghost btn-sm" style="color:var(--red);">
+            <i data-lucide="trash-2"></i> Clear Plan
+          </button>
+          <button id="surprise-btn" class="btn btn-primary">
+            <i data-lucide="wand-2"></i> Surprise Me ✨
+          </button>
+          <button id="get-recommendation-btn" class="btn btn-accent">
+            <i data-lucide="brain"></i> Get AI Recommendation
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="ai-loading" class="ai-loading hidden">
+        <div class="spinner"></div>
+        <p>Analyzing your menu & budget…</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="ai-error" class="toast toast-error hidden"></div>
+
+      <!-- Result Area -->
+      <div id="ai-result" class="hidden">
+        <!-- Summary Cards -->
+        <div class="ai-summary-grid" id="ai-summary"></div>
+
+        <!-- Weekly Plan Table -->
+        <div class="card ai-plan-card">
+          <h3><i data-lucide="calendar-range"></i> Weekly Meal Plan</h3>
+          <div id="ai-plan" class="plan-grid"></div>
+        </div>
+
+        <!-- Health Advice -->
+        <div class="card ai-advice-card" id="ai-advice"></div>
+
+        <!-- Chart -->
+        <div class="card chart-card">
+          <h3><i data-lucide="pie-chart"></i> Budget Breakdown</h3>
+          <div class="chart-wrapper">
+            <canvas id="budget-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HISTORY ── -->
+    <section id="history-section" class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <i data-lucide="history"></i>
+          <h2>Recommendation History</h2>
+        </div>
+        <button id="clear-history-btn" class="btn btn-ghost btn-sm hidden">
+          <i data-lucide="trash-2"></i> Clear
+        </button>
+      </div>
+      <div id="history-list" class="history-list">
+        <div class="empty-state" id="history-empty">
+          <i data-lucide="archive"></i>
+          <p>No past recommendations yet.</p>
+        </div>
+      </div>
+    </section>
+    </div> <!-- /main-view -->
+
+    <!-- ───────── SETTINGS VIEW ───────── -->
+    <section id="settings-view" class="section hidden">
+      <div class="section-header">
+        <h2><i data-lucide="settings"></i> Application Settings</h2>
+        <button id="settings-back-btn" class="btn btn-ghost btn-sm">
+          <i data-lucide="arrow-left"></i> Back to Dashboard
+        </button>
+      </div>
+
+      <div class="settings-grid" style="display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 20px;">
+        
+        <!-- Budget Config -->
+        <div class="card">
+          <h3><i data-lucide="wallet"></i> Budget Configuration</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="set-allowance">Monthly Allowance (₦)</label>
+              <input type="number" id="set-allowance" min="0" />
+            </div>
+            <div class="form-group">
+              <label for="set-savings">Savings Goal (₦)</label>
+              <input type="number" id="set-savings" min="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="set-start-date">Budget Start Date</label>
+              <input type="date" id="set-start-date" />
+            </div>
+            <div class="form-group">
+              <label for="set-end-date">Budget End Date</label>
+              <input type="date" id="set-end-date" />
+            </div>
+          </div>
+          <button id="settings-save-budget" class="btn btn-primary">Save Budget Settings</button>
+        </div>
+
+        <!-- Food Config -->
+        <div class="card">
+          <div class="section-header" style="margin-bottom: 12px;">
+            <h3><i data-lucide="pizza"></i> Food Menu Items</h3>
+            <div>
+              <button id="reset-food-btn" class="btn btn-ghost btn-sm" style="color:var(--text-muted); margin-right: 8px;">
+                Reset Defaults
+              </button>
+              <button id="add-food-btn" class="btn btn-primary btn-sm">
+                <i data-lucide="plus"></i> Add Item
+              </button>
+            </div>
+          </div>
+          <p style="font-size: 0.9rem; color:var(--text-secondary); margin-bottom: 20px;">
+            Manage the list of available foods on your campus. The AI will build plans strictly from this list.
+          </p>
+          <div class="food-grid" id="food-list">
+            <!-- Food items injected by JS -->
+          </div>
+        </div>
+
+        <!-- User Profile Config -->
+        <div class="card">
+          <h3><i data-lucide="user"></i> Personal Identity</h3>
+          <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 16px;">
+            
+        <!-- User Identity Config -->
+        <div class="card">
+          <h3><i data-lucide="user"></i> Personal Identity</h3>
+          <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 16px;">
+            <div class="form-group">
+              <label for="profile-name">Username / Display Name</label>
+              <input type="text" id="profile-name" placeholder="Student" />
+            </div>
+            <button id="save-profile-btn" class="btn btn-primary">Update Username</button>
+          </div>
+        </div>
+
+        <!-- Master Password & Security Config -->
+        <div class="card" id="security-center">
+          <h3><i data-lucide="shield-check"></i> Security Center</h3>
+          <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;">
+            <div style="padding: 12px; background: var(--accent-bg); border-radius: var(--radius-sm); border: 1px solid var(--accent-light);">
+               <p style="font-size: 0.85rem; color: var(--accent); font-weight: 600;">Data is Encrypted (AES-GCM)</p>
+            </div>
+            <button id="rotate-master-password-btn" class="btn btn-ghost" style="justify-content: flex-start;">
+              <i data-lucide="key-round"></i> Change Master Password
+            </button>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">This rotates the encryption key for all your local data.</p>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- Appearance & Data Config -->
+        <div class="card">
+          <h3><i data-lucide="database"></i> Data & Appearance</h3>
+          <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="theme-selector">Application Theme</label>
+              <select id="theme-selector">
+                <option value="dark">🌙 Dark Mode (Default)</option>
+                <option value="light">☀️ Light Mode</option>
+                <option value="forest">🌲 Forest Theme</option>
+                <option value="sunset">🌅 Sunset Theme</option>
+              </select>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+              <div style="font-size:0.9rem; font-weight:600;">Enable UI Sound Effects</div>
+              <input type="checkbox" id="sound-toggle" checked style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;">
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border);" />
+            <button id="export-data-btn" class="btn btn-ghost" style="justify-content: flex-start;">
+              <i data-lucide="download"></i> Export JSON Backup
+            </button>
+            <label class="btn btn-ghost" style="justify-content: flex-start; margin: 0; cursor: pointer;">
+              <i data-lucide="upload"></i> Import JSON Backup
+              <input type="file" id="import-data-file" accept=".json" style="display: none;" />
+            </label>
+            <hr style="border:0; border-top:1px solid var(--border);" />
+            <button id="reset-data-btn" class="btn btn-ghost" style="justify-content: flex-start; color: var(--red);">
+              <i data-lucide="alert-triangle"></i> Reset All Data
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div> <!-- /app-container -->
+
+  <!-- ───────── FOOD MODAL ───────── -->
+  <div id="food-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Food Item</h3>
+        <button class="icon-btn modal-close" id="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="food-form">
+        <div class="form-group">
+          <label for="food-name">Item Name</label>
+          <input type="text" id="food-name" required placeholder="e.g. Grilled Chicken Wrap" />
+        </div>
+
+
+        <div class="form-group" style="margin-top: 16px;">
+          <label>Pricing Type</label>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            <label style="font-weight: normal; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="food-type" value="fixed" checked /> Fixed Price
+            </label>
+            <label style="font-weight: normal; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="food-type" value="portion" /> Portion-based (Multiple cafeterias)
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="fixed-price-group">
+          <label for="food-price">Price (₦)</label>
+          <input type="number" id="food-price" min="1" step="50" placeholder="500" />
+        </div>
+
+        <div class="form-group hidden" id="portion-price-group">
+          <label>Cafeteria Prices</label>
+          <div id="cafeteria-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+            <!-- Dynamic rows inserted here -->
+          </div>
+          <button type="button" id="add-cafeteria-btn" class="btn btn-ghost btn-sm" style="align-self: flex-start; margin-top: 4px;">
+            <i data-lucide="plus"></i> Add Cafeteria
+          </button>
+        </div>
+
+        <input type="hidden" id="food-edit-id" value="" />
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 24px;">
+          <i data-lucide="check"></i> <span id="modal-submit-text">Add Item</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings Modal removed, handled by settings-view instead -->
+
+  </div>
+
+  <!-- ───────── PASSWORD MODAL ───────── -->
+  <div id="password-modal" class="modal-overlay hidden">
+    <div class="modal w-full max-w-sm">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="icon-btn" id="password-modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="password-form">
+        <div class="form-group">
+          <label for="current-password">Current Password</label>
+          <input type="password" id="current-password" required placeholder="••••••••" />
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" required placeholder="••••••••" minlength="6" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:24px;">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ───────── TOAST CONTAINER ───────── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ───────── SCRIPTS ───────── -->
+  <script src="js/audio.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/budget.js"></script>
+  <script src="js/food.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/chartModule.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
