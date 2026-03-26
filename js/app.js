@@ -165,13 +165,22 @@ const App = (() => {
     lucide.createIcons();
   }
 
+  function logoutInit() {
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('app-container').classList.add('hidden');
+    
+    // Clear any sensitive initials if needed
+    const navInitial = document.getElementById('nav-profile-initial');
+    if (navInitial) navInitial.textContent = '';
+  }
+
   function getState() { return appState; }
   function updateState(newPartial) { 
     appState = { ...appState, ...newPartial }; 
     Security.saveAppState(appState);
   }
 
-  return { init, loginInit, getState, updateState };
+  return { init, loginInit, logoutInit, getState, updateState };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);
