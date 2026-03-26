@@ -41,4 +41,10 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, console.log(`🚀 Server running on port ${PORT}`));
+// Only listen if not being imported (e.g., during local dev)
+if (require.main === module) {
+    app.listen(PORT, console.log(`🚀 Server running on port ${PORT}`));
+}
+
+// Export app for Vercel
+module.exports = app;
