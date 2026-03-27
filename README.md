@@ -1,108 +1,56 @@
-# 🍽️ Student Meal Planner
+# 🥣 SapaSaver 
 
-**AI-powered meal planning for students on a budget.** Built with vanilla HTML/CSS/JS and powered by Groq AI.
+**Beat Sapa. Eat Better.** AI-powered meal planning for students surviving on a budget. 
 
-![Student Meal Planner](https://img.shields.io/badge/AI-Powered-6c5ce7?style=for-the-badge)
-![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=for-the-badge)
+![SapaSaver](https://img.shields.io/badge/Status-Vercel%20Live-6c5ce7?style=for-the-badge)
+![Encryption](https://img.shields.io/badge/Security-AES--GCM-00b894?style=for-the-badge)
 
 ---
 
 ## ✨ Features
 
-- **Smart Budget Dashboard** – Set your monthly allowance and savings goal, see real-time remaining budget
-- **Campus Food Menu** – Pre-loaded with common items; add, edit, or remove items (persisted in localStorage)
-- **AI Meal Planning** – Groq AI generates a full 7-day meal plan optimized for health and budget
-- **Budget Visualization** – Doughnut chart showing spending by meal type
-- **Recommendation History** – All past plans saved and viewable
-- **Dark / Light Mode** – Auto-detects OS preference, toggleable
-- **Fully Responsive** – Works on mobile, tablet, and desktop
+- **🛡️ Encrypted Vault** – All your budget data is secured with a Master Password using AES-GCM encryption.
+- **🥣 Staple Sustainability** – Tell SapaSaver if you have Garri or Cereal at home; the AI will optimize your meals for ₦0 cost. 
+- **🧠 AI Meal Planning** – Powered by Groq AI (`gpt-oss-120b`) for ultra-low-budget meal recommendations.
+- **📉 Budget Snapshots** – Real-time tracking of your remaining allowance and daily targets.
+- **🌙 Multiple Themes** – Choose between Darkness, Forest, and Sunset views.
 
 ---
 
-## 🚀 Quick Start (Local Dev)
+## 🚀 Deployment (Vercel)
 
-### 1. Clone & serve
+SapaSaver is built to be deployed on Vercel with a single click.
 
-```bash
-# No build step needed – it's vanilla HTML/CSS/JS
-npx -y serve .
-```
-
-### 2. Add your Groq API Key
-
-1. Open the app in your browser (usually `http://localhost:3000`)
-2. Click the **⚙️ Settings** gear icon in the header
-3. Paste your [Groq API key](https://console.groq.com/keys) into the **Groq API Key** field
-4. Click **Save Settings**
-
-### 3. Use the app
-
-1. Set your **Monthly Allowance** and **Savings Goal**
-2. Review (and optionally edit) the **Campus Food Menu**
-3. Click **🧠 Get AI Recommendation**
-4. View your personalized weekly meal plan!
-
----
-
-## 🌐 Production Deployment (Vercel)
-
-For production, you should **never expose your API key in the browser**. Use the included serverless proxy instead:
-
-### 1. Deploy to Vercel
-
-```bash
-npx -y vercel
-```
-
-### 2. Set your environment variable
-
-```bash
-vercel env add GROQ_API_KEY
-```
-
-### 3. Configure the proxy in the app
-
-1. Open Settings in the app
-2. Set **Proxy URL** to: `https://your-app.vercel.app/api/recommend`
-3. Leave the **API Key** field empty (the proxy handles it)
-
-The `api/recommend.js` file is automatically detected by Vercel as a serverless function.
+1. **Connect Repository** to Vercel.
+2. **Add Environment Variables**:
+   - `MONGO_URI`: Your MongoDB connection string.
+   - `GROQ_API_KEY`: Your Groq API key.
+   - `JWT_SECRET`: A random string for securing login tokens.
+3. **Deploy** 🚀
 
 ---
 
 ## 📁 Project Structure
 
 ```
-├── index.html          Main app shell
-├── css/style.css       Design system (light/dark, responsive)
-├── js/
-│   ├── app.js          App initializer
-│   ├── store.js        localStorage CRUD
-│   ├── theme.js        Dark/light toggle
-│   ├── budget.js       Budget computation
-│   ├── food.js         Food list CRUD UI
-│   ├── ai.js           Groq API integration
-│   ├── chartModule.js  Chart.js visualization
-│   └── history.js      Past recommendations
-├── api/
-│   └── recommend.js    Serverless proxy (Vercel/Netlify)
-├── .env.example        API key template
-└── README.md           This file
+├── assets/             Images & Favicons
+├── api/                Vercel Serverless Functions
+├── server/             Express.js Logic & Models
+├── js/                 Frontend Modules (Vanilla JS)
+├── css/                Design System (Vanilla CSS)
+├── vercel.json         Deployment Configuration
+└── index.html          Main Dashboard
 ```
 
 ---
 
-## 🔑 API
-
-Uses [Groq API](https://console.groq.com/) with model `llama3-70b-8192`.
-
-The AI is prompted to return structured JSON containing:
-- A 7-day meal plan (breakfast, lunch, dinner, snacks)
-- Total costs and projected savings
-- A health score and nutritional advice
+## 🔑 Technologies
+- **Frontend**: Vanilla HTML/CSS/JS (Lucide Icons, Chart.js)
+- **Backend**: Node.js, Express, MongoDB Mongoose
+- **AI**: Groq API
+- **Security**: Web Crypto API (PBKDF2 + AES-GCM)
 
 ---
 
 ## 📄 License
-
 MIT
