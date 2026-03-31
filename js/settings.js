@@ -51,6 +51,7 @@ const Settings = (() => {
     const state = App.getState();
     document.getElementById('set-allowance').value = state.allowance || 0;
     document.getElementById('set-savings').value   = state.savingsGoal || 0;
+    document.getElementById('set-misc').value       = state.miscExpenses || 0;
 
     const startInput = document.getElementById('set-start-date');
     const endInput   = document.getElementById('set-end-date');
@@ -124,10 +125,11 @@ const Settings = (() => {
     try {
       const allowance = parseFloat(document.getElementById('set-allowance').value) || 0;
       const savingsGoal = parseFloat(document.getElementById('set-savings').value) || 0;
+      const miscExpenses = parseFloat(document.getElementById('set-misc').value) || 0;
       const budgetStartDate = document.getElementById('set-start-date').value;
       const budgetEndDate   = document.getElementById('set-end-date').value;
 
-      App.updateState({ allowance, savingsGoal, budgetStartDate, budgetEndDate });
+      App.updateState({ allowance, savingsGoal, miscExpenses, budgetStartDate, budgetEndDate });
       
       Budget.compute(); 
       showToast('Budget settings saved to secure vault!', 'success');

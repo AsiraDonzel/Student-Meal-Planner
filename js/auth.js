@@ -56,8 +56,19 @@ const Auth = (() => {
 
       API.setToken(data.token);
       localStorage.setItem('smp_user', JSON.stringify(data.user)); // Cache user
-      showToast('Welcome to Student Meal Planner!', 'success');
+      showToast('Welcome to SapaSaver!', 'success');
       
+      // Sync registration name into the encrypted vault
+      if (data.user && data.user.name) {
+        App.updateState({
+          allowance: 0,
+          userProfile: { 
+            username: data.user.name, 
+            avatar: data.user.name.charAt(0).toUpperCase() 
+          }
+        });
+      }
+
       // Initialize main app
       App.loginInit();
     } catch (err) {

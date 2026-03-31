@@ -22,10 +22,11 @@ const Budget = (() => {
     const state = App.getState();
     const allowance = parseFloat(state.allowance) || 0;
     const savings   = parseFloat(state.savingsGoal) || 0;
+    const misc      = parseFloat(state.miscExpenses) || 0;
     const history   = state.spendingHistory || [];
     
-    // Base Spending Pool
-    const spendingBudget = Math.max(0, allowance - savings);
+    // Base Spending Pool: allowance minus savings minus misc expenses
+    const spendingBudget = Math.max(0, allowance - savings - misc);
 
     let daysTotal = 30, daysLeft = 30;
     if (state.budgetStartDate && state.budgetEndDate) {
@@ -93,8 +94,9 @@ const Budget = (() => {
     const state = App.getState();
     const allowance = parseFloat(state.allowance) || 0;
     const savings   = parseFloat(state.savingsGoal) || 0;
+    const misc      = parseFloat(state.miscExpenses) || 0;
     const history   = state.spendingHistory || [];
-    const spendingBudget = Math.max(0, allowance - savings);
+    const spendingBudget = Math.max(0, allowance - savings - misc);
     const totalSpent = history.reduce((a, b) => a + Number(b.cost), 0);
     const moneyLeft = Math.max(0, spendingBudget - totalSpent);
     

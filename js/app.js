@@ -33,8 +33,9 @@ function escapeHTML(str) {
 
 const App = (() => {
   let appState = {
-    allowance: 50000,
-    savingsGoal: 10000,
+    allowance: 0,
+    savingsGoal: 0,
+    miscExpenses: 0,
     foodItems: [],
     spendingHistory: [],
     savedWeeklyPlan: null,

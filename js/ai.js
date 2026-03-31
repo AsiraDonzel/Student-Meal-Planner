@@ -38,7 +38,7 @@ const AI = (() => {
       // Injecting staple availability and current budget constraints.
       // The AI is instructed to treat these staples as ₦0 cost meal bases.
       const promptPayload = {
-        ...payload,
+        mode: isSurprise ? 'surprise' : 'normal',
         staples: {
           garri: staples.hasGarri ? 'Yes' : 'No',
           cereal: staples.hasCereal ? 'Yes' : 'No'
@@ -56,7 +56,39 @@ const AI = (() => {
       });
 
       currentPlan = res.data;
-      App.updateState({ savedWeeklyPlan: currentPlan });
+      
+      // ── DATE STAMPING ──
+      // Assign real dates to each day based on the budget start date
+      const state2 = App.getState();
+      const startDate = state2.budgetStartDate ? new Date(state2.budgetStartDate) : new Date();
+      const now = new Date();
+      
+      // Calculate which week we're in relative to budget start
+      const daysSinceStart = Math.max(0, Math.floor((now - startDate) / (1000 * 60 * 60 * 24)));
+      const currentWeekNum = Math.floor(daysSinceStart / 7) + 1;
+      
+      // Find the Monday of the current week (or the start of the 7-day block)
+      const weekStartDate = new Date(startDate);
+      weekStartDate.setDate(weekStartDate.getDate() + (currentWeekNum - 1) * 7);
+      
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      
+      if (currentPlan.weekly_plan) {
+        currentPlan.weekly_plan.forEach((day, i) => {
+          const d = new Date(weekStartDate);
+          d.setDate(d.getDate() + i);
+          day.date = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
+          day.isoDate = d.toISOString().split('T')[0]; // e.g., "2026-03-31"
+        });
+        currentPlan.weekLabel = `Week ${currentWeekNum}`;
+      }
+      
+      // Initialize meal usage log (tracks which meals the user actually followed)
+      const mealUsageLog = state2.mealUsageLog || {};
+      // Don't reset — keep previous weeks' data
+      
+      App.updateState({ savedWeeklyPlan: currentPlan, mealUsageLog });
       
       displayResult();
 
@@ -85,17 +117,32 @@ const AI = (() => {
   function displayResult() {
     if (!currentPlan) return;
     const plan = currentPlan;
+    const appState = App.getState();
+    const usageLog = appState.mealUsageLog || {};
     
     const resultEl  = document.getElementById('ai-result');
     const summaryEl = document.getElementById('ai-summary');
     const planEl    = document.getElementById('ai-plan');
     const adviceEl  = document.getElementById('ai-advice');
 
+    // Calculate actual spent from usage log
+    let actualSpent = 0;
+    Object.values(usageLog).forEach(dayMeals => {
+      Object.values(dayMeals).forEach(entry => {
+        if (entry.used) actualSpent += (entry.cost || 0);
+      });
+    });
+
     // Summary cards
     const s = plan.summary || {};
     const mealsEmoji = s.recommended_meals_per_day === 1 ? '1️⃣' : s.recommended_meals_per_day === 2 ? '2️⃣' : '3️⃣';
+    const weekLabel = plan.weekLabel || 'This Week';
     
     if(summaryEl) summaryEl.innerHTML = `
+      <div class="ai-summary-card card-total" style="grid-column: 1 / -1; background: var(--bg-tertiary); border-left: 4px solid var(--accent);">
+        <div class="ai-stat-label">📅 ${escapeHTML(weekLabel)}</div>
+        <div class="ai-stat-value" style="font-size:1.2rem; color:var(--text-primary);">Planned: ₦${(s.total_weekly_cost || 0).toLocaleString()} · Actual Spent: <span style="color:var(--green);">₦${actualSpent.toLocaleString()}</span></div>
+      </div>
       <div class="ai-summary-card card-total">
         <div class="ai-stat-label">Weekly Cost</div>
         <div class="ai-stat-value">₦${(s.total_weekly_cost || 0).toLocaleString()}</div>
@@ -121,24 +168,61 @@ const AI = (() => {
     // Weekly Calendar Render
     const week = plan.weekly_plan || [];
     if(planEl) planEl.innerHTML = week.map((day, dIdx) => {
-      const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+      const mealTypes = ['breakfast', 'lunch', 'dinner'];
+      const mealEmojis = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+      const dateLabel = day.date || day.day;
+      const isoDate = day.isoDate || `day-${dIdx}`;
       
       const mealsHtml = mealTypes.map(m => {
-        if (!day[m]) return '';
         const mObj = day[m];
-        return `
-          <div class="plan-meal" draggable="true" data-didx="${dIdx}" data-mtype="${m}" style="cursor: grab; position:relative;">
-            <div style="display:flex; justify-content:space-between; align-items:start;">
-              <div class="plan-meal-type">${m}</div>
-              <button class="icon-btn delete-meal-btn" data-didx="${dIdx}" data-mtype="${m}" title="Remove Meal" style="width:24px;height:24px; border:none; background:transparent;"><i data-lucide="trash-2" style="width:14px;height:14px;color:var(--red);"></i></button>
+        if (!mObj) return `
+          <div class="plan-meal plan-meal-skip" style="opacity: 0.5; border-style: dashed;">
+            <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+            <div class="plan-meal-name" style="color:var(--text-muted); font-style:italic;">No data</div>
+          </div>`;
+        
+        const isSkip = mObj.item && mObj.item.toLowerCase() === 'skip';
+        const isFree = mObj.cost === 0 && !isSkip;
+        
+        // Check if this meal was already marked as used
+        const usageKey = `${isoDate}_${m}`;
+        const isUsed = usageLog[isoDate] && usageLog[isoDate][m] && usageLog[isoDate][m].used;
+        
+        if (isSkip) {
+          return `
+          <div class="plan-meal plan-meal-skip" style="opacity: 0.55; border-style: dashed; background: var(--bg-tertiary);">
+            <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+            <div class="plan-meal-name" style="color:var(--text-muted); font-style:italic; display:flex; align-items:center; gap:6px;">
+              ⏭️ Skip this meal
+              <span style="font-size:0.7rem; background:var(--orange-bg); color:var(--orange); padding:2px 8px; border-radius:50px;">SAVE</span>
             </div>
-            <div class="plan-meal-name" style="margin-top:2px;">
+            <div class="plan-meal-cost" style="color:var(--text-muted);">₦0</div>
+          </div>`;
+        }
+        
+        const usedStyle = isUsed ? 'border-color: var(--green); background: rgba(0, 184, 148, 0.06);' : '';
+        const nameStyle = isUsed ? 'text-decoration: line-through; opacity: 0.6;' : '';
+        
+        return `
+          <div class="plan-meal" draggable="true" data-didx="${dIdx}" data-mtype="${m}" style="cursor: grab; position:relative; ${usedStyle}">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <label class="meal-check-label" style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:0.7rem; color:${isUsed ? 'var(--green)' : 'var(--text-muted)'};">
+                  <input type="checkbox" class="meal-used-checkbox" data-iso="${isoDate}" data-mtype="${m}" data-cost="${mObj.cost}" data-item="${escapeHTML(mObj.item)}" ${isUsed ? 'checked' : ''} style="accent-color:var(--green); width:16px; height:16px;">
+                  ${isUsed ? '✅ Used' : 'Mark as used'}
+                </label>
+                <button class="icon-btn delete-meal-btn" data-didx="${dIdx}" data-mtype="${m}" title="Remove Meal" style="width:24px;height:24px; border:none; background:transparent;"><i data-lucide="trash-2" style="width:14px;height:14px;color:var(--red);"></i></button>
+              </div>
+            </div>
+            <div class="plan-meal-name" style="margin-top:2px; ${nameStyle}">
               <div>${escapeHTML(mObj.item)}</div>
               ${mObj.cafeteria && mObj.cafeteria.trim() ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">📍 ${escapeHTML(mObj.cafeteria)}</div>` : ''}
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 8px;">
-              <div class="plan-meal-cost">₦${Number(mObj.cost).toLocaleString()}</div>
-              <button class="btn btn-ghost btn-sm log-purchase-btn" data-item="${escapeHTML(mObj.item)}" data-cost="${mObj.cost}" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Log</button>
+              <div class="plan-meal-cost" style="${isFree ? 'color:var(--green);' : ''}${isUsed ? 'color:var(--green);' : ''}">
+                ${isFree ? '<span style="font-size:0.7rem; background:var(--green-bg); color:var(--green); padding:2px 8px; border-radius:50px; margin-right:4px;">FREE</span>' : ''}${isUsed ? '<span style="font-size:0.7rem; background:var(--green-bg); color:var(--green); padding:2px 8px; border-radius:50px; margin-right:4px;">SPENT</span>' : ''}₦${Number(mObj.cost).toLocaleString()}
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -146,21 +230,52 @@ const AI = (() => {
       return `
         <div class="plan-day" data-didx="${dIdx}" ondragover="event.preventDefault();" style="transition: background 0.2s;">
           <div class="plan-day-header">
-            <span class="plan-day-name">${escapeHTML(day.day)}</span>
+            <span class="plan-day-name">📆 ${escapeHTML(dateLabel)}</span>
             <span class="plan-day-total">₦${Number(day.daily_total).toLocaleString()}</span>
           </div>
           <div class="plan-meals droppable-zone">${mealsHtml}</div>
         </div>`;
     }).join('');
 
-    // Attach Log Purchase events
-    document.querySelectorAll('.log-purchase-btn').forEach(b => {
-      b.addEventListener('click', (e) => {
-        const cost = parseFloat(e.currentTarget.dataset.cost);
-        const item = e.currentTarget.dataset.item;
-        Budget.logPurchase(item, cost);
-        e.currentTarget.innerHTML = "Logged ✓";
-        e.currentTarget.disabled = true;
+    // Attach Meal Usage Checkbox events
+    document.querySelectorAll('.meal-used-checkbox').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const iso = e.target.dataset.iso;
+        const mType = e.target.dataset.mtype;
+        const cost = parseFloat(e.target.dataset.cost) || 0;
+        const item = e.target.dataset.item;
+        const isChecked = e.target.checked;
+        
+        const state = App.getState();
+        const log = state.mealUsageLog || {};
+        
+        // Initialize day if needed
+        if (!log[iso]) log[iso] = {};
+        
+        if (isChecked) {
+          // Mark as used and log the purchase
+          log[iso][mType] = { used: true, cost, item };
+          Budget.logPurchase(`${item} (${mType})`, cost);
+          showToast(`✅ ${item} marked as used — ₦${cost.toLocaleString()} deducted`, 'success');
+        } else {
+          // Unmark — remove from usage log and reverse the cost
+          if (log[iso][mType]) {
+            delete log[iso][mType];
+          }
+          // Remove the corresponding entry from spending history
+          const history = state.spendingHistory || [];
+          const idx = history.findIndex(h => h.item === `${item} (${mType})` && h.cost === cost);
+          if (idx > -1) history.splice(idx, 1);
+          App.updateState({ spendingHistory: history });
+          showToast(`↩️ ${item} unmarked — ₦${cost.toLocaleString()} restored`, 'info');
+        }
+        
+        App.updateState({ mealUsageLog: log });
+        Budget.compute();
+        if(window.AudioSystem) window.AudioSystem.playSound('chaching');
+        
+        // Re-render to update visual state
+        displayResult();
       });
     });
 

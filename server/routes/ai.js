@@ -41,18 +41,30 @@ router.post('/recommend', protect, async (req, res) => {
             }
         }).join('\n');
 
-        const systemPrompt = `You are StudentWalletAI, an expert financial advisor and nutritionist for Nigerian college students. Generate an optimal, budget-friendly, healthy weekly meal plan. All prices are in Nigerian Naira (₦).
+        // Get staple info from client payload
+        const staples = req.body.staples || {};
+        const hasGarri = staples.garri === 'Yes';
+        const hasCereal = staples.cereal === 'Yes';
+
+        let stapleStr = '';
+        if (hasGarri || hasCereal) {
+            const stapleList = [];
+            if (hasGarri) stapleList.push('Soaked Garri (with sugar/groundnut) — ₦0 (already owned)');
+            if (hasCereal) stapleList.push('Cereal (cornflakes/oats with milk) — ₦0 (already owned)');
+            stapleStr = `\n\nSTAPLE ITEMS (Already Purchased — ₦0 cost):\n${stapleList.join('\n')}\nYou MUST use these staple items in the plan, especially for breakfast or dinner. Treat them as ₦0 cost. Prioritize them heavily when the budget is tight to maximize savings.`;
+        }
+
+        const systemPrompt = `You are SapaSaverAI, a budget-survival expert for Nigerian college students. Generate an optimal, budget-friendly weekly meal plan. All prices are in Nigerian Naira (₦).
 
 RULES:
-1. Total weekly cost must NOT exceed ₦${Math.round(weeklyBudget).toLocaleString()} (weekly budget).
-${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN that the user might not normally choose. Surprise the user with a fun twist, but strictly stick to the budget.' : `2. Balance healthy and moderate items. Limit unhealthy/"treat" items to 1-2 per week max. You MUST actively analyze each food's name to determine its health value.`}
+1. Total weekly cost MUST NOT exceed ₦${Math.round(weeklyBudget).toLocaleString()}.
+${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise the user with fun combinations, but strictly respect the budget.' : '2. Balance nutrition across the week. Analyze each food name for its health value.'}
 3. Vary meals across the week — do NOT repeat the same combination every day.
-4. Based on the budget, recommend how many meals per day the student should eat (1, 2, or 3). If the budget is very tight, recommend 1-2 meals instead of 3. If comfortable, recommend 3 meals plus a snack.
-5. You must determine the best meal type (breakfast, lunch, dinner, snack) for each food based on its name.
-6. Only use items from the provided menu. For "Portion" items, you can assume the student can buy it at the listed cafeteria for the lowest price shown.
-7. Include the cafeteria name in your output if it was provided for that item.
-8. All costs must be in Nigerian Naira (₦).
-9. For each day, ONLY include the meals you recommend (no empty slots).
+4. Every day MUST have exactly 3 slots: "breakfast", "lunch", "dinner".
+5. If the budget cannot afford a meal for a slot, set the item to "Skip" with cost 0. This tells the student they should skip that meal to save money.
+6. Only use items from the provided menu (plus any staple items listed below).
+7. For "Portion" items, use the cheapest cafeteria price shown.
+8. Include the cafeteria name if available for that item.${stapleStr}
 
 RESPOND ONLY with valid JSON matching this exact schema (no markdown, no explanation):
 {
@@ -62,16 +74,15 @@ RESPOND ONLY with valid JSON matching this exact schema (no markdown, no explana
     "projected_savings": 0,
     "health_score_out_of_10": 0,
     "recommended_meals_per_day": 3,
-    "meals_per_day_reason": "Short explanation of why this number of meals was chosen based on budget."
+    "meals_per_day_reason": "Short explanation based on budget."
   },
   "advice": "A short, encouraging 2-sentence summary.",
   "weekly_plan": [
     {
       "day": "Monday",
-      "breakfast": { "item": "Name", "cost": 0, "cafeteria": "Name of cafeteria (or empty string)" },
-      "lunch": { "item": "Name", "cost": 0, "cafeteria": "" },
-      "dinner": { "item": "Name", "cost": 0, "cafeteria": "" },
-      "snack": { "item": "Name", "cost": 0, "cafeteria": "" },
+      "breakfast": { "item": "Name or Skip", "cost": 0, "cafeteria": "" },
+      "lunch": { "item": "Name or Skip", "cost": 0, "cafeteria": "" },
+      "dinner": { "item": "Name or Skip", "cost": 0, "cafeteria": "" },
       "daily_total": 0
     }
   ]
@@ -84,7 +95,7 @@ My spending budget is ₦${spendingBudget.toLocaleString()} for ${days} days.
 Here are the available food items at my school:
 ${foodListStr}
 
-Please generate a 7-day meal plan.`;
+Please generate a 7-day meal plan with breakfast, lunch, and dinner for each day.`;
 
         const requestBody = {
             model: 'openai/gpt-oss-120b',

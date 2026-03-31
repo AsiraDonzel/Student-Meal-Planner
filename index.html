@@ -168,7 +168,7 @@
         <div class="card card-stat card-remaining">
           <div class="card-label"><i data-lucide="banknote"></i> Spending Budget</div>
           <p class="stat" id="remaining-display">₦0</p>
-          <span class="stat-sub">allowance − savings</span>
+          <span class="stat-sub">allowance − savings − misc</span>
         </div>
 
         <!-- Daily Budget -->
@@ -296,6 +296,12 @@
             <div class="form-group">
               <label for="set-savings">Savings Goal (₦)</label>
               <input type="number" id="set-savings" min="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="set-misc">Misc / Other Expenses (₦)</label>
+              <input type="number" id="set-misc" min="0" placeholder="Data, pure water, etc." />
             </div>
           </div>
           <div class="form-row">
@@ -430,7 +436,7 @@
 
         <div class="form-group" id="fixed-price-group">
           <label for="food-price">Price (₦)</label>
-          <input type="number" id="food-price" min="1" step="50" placeholder="500" />
+          <input type="number" id="food-price" min="0" step="50" placeholder="500" />
         </div>
 
         <div class="form-group hidden" id="portion-price-group">

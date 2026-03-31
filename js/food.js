@@ -56,9 +56,18 @@ const Food = (() => {
     const row = document.createElement('div');
     row.style.display = 'flex';
     row.style.gap = '8px';
+    
+    const cafeterias = ['Captain Cook', 'CAF 1', 'CAF 2', 'Smoothie Shack', 'Med Cafe'];
+    const options = cafeterias.map(c => 
+      `<option value="${c}" ${c === cafName ? 'selected' : ''}>${c}</option>`
+    ).join('');
+    
     row.innerHTML = `
-      <input type="text" class="caf-name-input" placeholder="Cafeteria Name" value="${cafName}" style="flex:1;" required>
-      <input type="number" class="caf-price-input" placeholder="Price (₦)" value="${cafPrice}" style="width:100px;" required min="1">
+      <select class="caf-name-input" style="flex:1;" required>
+        <option value="" disabled ${!cafName ? 'selected' : ''}>Select Cafeteria</option>
+        ${options}
+      </select>
+      <input type="number" class="caf-price-input" placeholder="Price (₦)" value="${cafPrice}" style="width:100px;" required min="0">
       <button type="button" class="btn btn-ghost btn-sm remove-caf-btn" style="padding:0 8px; color:var(--red);" aria-label="Remove">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
       </button>
