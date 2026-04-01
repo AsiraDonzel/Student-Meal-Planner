@@ -27,9 +27,6 @@ const Settings = (() => {
     document.getElementById('import-data-file').addEventListener('change', importData);
     document.getElementById('reset-data-btn').addEventListener('click', resetData);
 
-    // Food Defaults
-    document.getElementById('reset-food-btn').addEventListener('click', resetFoodDefaults);
-
     // Profile Management
     document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
     
@@ -52,6 +49,7 @@ const Settings = (() => {
     document.getElementById('set-allowance').value = state.allowance || 0;
     document.getElementById('set-savings').value   = state.savingsGoal || 0;
     document.getElementById('set-misc').value       = state.miscExpenses || 0;
+    document.getElementById('set-pack-price').value  = state.packPrice ?? 200;
 
     const startInput = document.getElementById('set-start-date');
     const endInput   = document.getElementById('set-end-date');
@@ -126,10 +124,11 @@ const Settings = (() => {
       const allowance = parseFloat(document.getElementById('set-allowance').value) || 0;
       const savingsGoal = parseFloat(document.getElementById('set-savings').value) || 0;
       const miscExpenses = parseFloat(document.getElementById('set-misc').value) || 0;
+      const packPrice = parseFloat(document.getElementById('set-pack-price').value) || 0;
       const budgetStartDate = document.getElementById('set-start-date').value;
       const budgetEndDate   = document.getElementById('set-end-date').value;
 
-      App.updateState({ allowance, savingsGoal, miscExpenses, budgetStartDate, budgetEndDate });
+      App.updateState({ allowance, savingsGoal, miscExpenses, packPrice, budgetStartDate, budgetEndDate });
       
       Budget.compute(); 
       showToast('Budget settings saved to secure vault!', 'success');

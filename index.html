@@ -155,11 +155,11 @@
           </div>
           <div style="display:flex; gap:16px; margin-top:8px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 140px; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-tertiary); border-radius:var(--radius-sm); border: 1px solid var(--border);">
-              <label for="staple-garri" style="font-size:0.85rem; cursor:pointer;">☑️ Soaked Garri</label>
+              <label for="staple-garri" style="font-size:0.85rem; cursor:pointer;">Soaked Garri</label>
               <input type="checkbox" id="staple-garri" class="staple-toggle" style="width:18px; height:18px; accent-color:var(--accent);">
             </div>
             <div style="flex: 1; min-width: 140px; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-tertiary); border-radius:var(--radius-sm); border: 1px solid var(--border);">
-              <label for="staple-cereal" style="font-size:0.85rem; cursor:pointer;">🥣 Cereal (Cornflakes/Oats)</label>
+              <label for="staple-cereal" style="font-size:0.85rem; cursor:pointer;">Cereal (Cornflakes/Oats)</label>
               <input type="checkbox" id="staple-cereal" class="staple-toggle" style="width:18px; height:18px; accent-color:var(--accent);">
             </div>
           </div>
@@ -213,7 +213,7 @@
             <i data-lucide="trash-2"></i> Clear Plan
           </button>
           <button id="surprise-btn" class="btn btn-primary">
-            <i data-lucide="wand-2"></i> Surprise Me ✨
+            <i data-lucide="wand-2"></i> Surprise Me
           </button>
           <button id="get-recommendation-btn" class="btn btn-accent">
             <i data-lucide="brain"></i> Get AI Recommendation
@@ -303,6 +303,10 @@
               <label for="set-misc">Misc / Other Expenses (₦)</label>
               <input type="number" id="set-misc" min="0" placeholder="Data, pure water, etc." />
             </div>
+            <div class="form-group">
+              <label for="set-pack-price">Pack / Takeaway Price (₦)</label>
+              <input type="number" id="set-pack-price" min="0" placeholder="200" />
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -320,21 +324,18 @@
         <!-- Food Config -->
         <div class="card">
           <div class="section-header" style="margin-bottom: 12px;">
-            <h3><i data-lucide="pizza"></i> Food Menu Items</h3>
+            <h3><i data-lucide="pizza"></i> Campus Food Menu</h3>
             <div>
-              <button id="reset-food-btn" class="btn btn-ghost btn-sm" style="color:var(--text-muted); margin-right: 8px;">
-                Reset Defaults
-              </button>
               <button id="add-food-btn" class="btn btn-primary btn-sm">
-                <i data-lucide="plus"></i> Add Item
+                <i data-lucide="plus"></i> Add Items
               </button>
             </div>
           </div>
           <p style="font-size: 0.9rem; color:var(--text-secondary); margin-bottom: 20px;">
-            Manage the list of available foods on your campus. The AI will build plans strictly from this list.
+            Select the foods you normally eat. Prices are pre-filled from the campus cafeteria menu.
           </p>
           <div class="food-grid" id="food-list">
-            <!-- Food items injected by JS -->
+            <!-- Selected food items rendered by JS -->
           </div>
         </div>
 
@@ -408,52 +409,10 @@
     </section>
   </div> <!-- /app-container -->
 
-  <!-- ───────── FOOD MODAL ───────── -->
+  <!-- ───────── FOOD CATALOG MODAL ───────── -->
   <div id="food-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modal-title">Add Food Item</h3>
-        <button class="icon-btn modal-close" id="modal-close"><i data-lucide="x"></i></button>
-      </div>
-      <form id="food-form">
-        <div class="form-group">
-          <label for="food-name">Item Name</label>
-          <input type="text" id="food-name" required placeholder="e.g. Grilled Chicken Wrap" />
-        </div>
-
-
-        <div class="form-group" style="margin-top: 16px;">
-          <label>Pricing Type</label>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-            <label style="font-weight: normal; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-              <input type="radio" name="food-type" value="fixed" checked /> Fixed Price
-            </label>
-            <label style="font-weight: normal; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-              <input type="radio" name="food-type" value="portion" /> Portion-based (Multiple cafeterias)
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group" id="fixed-price-group">
-          <label for="food-price">Price (₦)</label>
-          <input type="number" id="food-price" min="0" step="50" placeholder="500" />
-        </div>
-
-        <div class="form-group hidden" id="portion-price-group">
-          <label>Cafeteria Prices</label>
-          <div id="cafeteria-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
-            <!-- Dynamic rows inserted here -->
-          </div>
-          <button type="button" id="add-cafeteria-btn" class="btn btn-ghost btn-sm" style="align-self: flex-start; margin-top: 4px;">
-            <i data-lucide="plus"></i> Add Cafeteria
-          </button>
-        </div>
-
-        <input type="hidden" id="food-edit-id" value="" />
-        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 24px;">
-          <i data-lucide="check"></i> <span id="modal-submit-text">Add Item</span>
-        </button>
-      </form>
+    <div class="modal" style="max-width:560px;">
+      <!-- Content injected dynamically by food.js -->
     </div>
   </div>
 
@@ -491,6 +450,7 @@
   <script src="js/api.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/budget.js"></script>
+  <script src="js/foodCatalog.js"></script>
   <script src="js/food.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/chartModule.js"></script>

@@ -20,7 +20,7 @@ const AI = (() => {
     
     // Custom loading text for surprise
     const pTag = loadingEl.querySelector('p');
-    if(pTag) pTag.textContent = isSurprise ? "Mixing up something surprising ✨..." : "Analyzing your menu & budget…";
+    if(pTag) pTag.textContent = isSurprise ? "Mixing up something surprising..." : "Analyzing your menu & budget...";
     
     loadingEl.classList.remove('hidden');
     resultEl.classList.add('hidden');
@@ -43,6 +43,8 @@ const AI = (() => {
           garri: staples.hasGarri ? 'Yes' : 'No',
           cereal: staples.hasCereal ? 'Yes' : 'No'
         },
+        packPrice: state.packPrice ?? 200,
+        foodItems: state.foodItems || [],
         constraints: {
           allowance: state.allowance,
           savingsGoal: state.savingsGoal,
@@ -104,7 +106,7 @@ const AI = (() => {
       return currentPlan;
     } catch (err) {
       console.error('AI Error:', err);
-      errorEl.textContent = `⚠️ ${err.message}`;
+      errorEl.textContent = `${err.message}`;
       errorEl.classList.remove('hidden');
       showToast('Failed to get recommendation.', 'error');
       if(window.AudioSystem) window.AudioSystem.playSound('error');
@@ -140,7 +142,7 @@ const AI = (() => {
     
     if(summaryEl) summaryEl.innerHTML = `
       <div class="ai-summary-card card-total" style="grid-column: 1 / -1; background: var(--bg-tertiary); border-left: 4px solid var(--accent);">
-        <div class="ai-stat-label">📅 ${escapeHTML(weekLabel)}</div>
+        <div class="ai-stat-label">${escapeHTML(weekLabel)}</div>
         <div class="ai-stat-value" style="font-size:1.2rem; color:var(--text-primary);">Planned: ₦${(s.total_weekly_cost || 0).toLocaleString()} · Actual Spent: <span style="color:var(--green);">₦${actualSpent.toLocaleString()}</span></div>
       </div>
       <div class="ai-summary-card card-total">
@@ -169,7 +171,7 @@ const AI = (() => {
     const week = plan.weekly_plan || [];
     if(planEl) planEl.innerHTML = week.map((day, dIdx) => {
       const mealTypes = ['breakfast', 'lunch', 'dinner'];
-      const mealEmojis = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+      const mealLabels = { breakfast: 'BREAKFAST', lunch: 'LUNCH', dinner: 'DINNER' };
       const dateLabel = day.date || day.day;
       const isoDate = day.isoDate || `day-${dIdx}`;
       
@@ -177,7 +179,7 @@ const AI = (() => {
         const mObj = day[m];
         if (!mObj) return `
           <div class="plan-meal plan-meal-skip" style="opacity: 0.5; border-style: dashed;">
-            <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+            <div class="plan-meal-type">${mealLabels[m] || m.toUpperCase()}</div>
             <div class="plan-meal-name" style="color:var(--text-muted); font-style:italic;">No data</div>
           </div>`;
         
@@ -191,9 +193,9 @@ const AI = (() => {
         if (isSkip) {
           return `
           <div class="plan-meal plan-meal-skip" style="opacity: 0.55; border-style: dashed; background: var(--bg-tertiary);">
-            <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+            <div class="plan-meal-type">${mealLabels[m] || m.toUpperCase()}</div>
             <div class="plan-meal-name" style="color:var(--text-muted); font-style:italic; display:flex; align-items:center; gap:6px;">
-              ⏭️ Skip this meal
+              Skip this meal
               <span style="font-size:0.7rem; background:var(--orange-bg); color:var(--orange); padding:2px 8px; border-radius:50px;">SAVE</span>
             </div>
             <div class="plan-meal-cost" style="color:var(--text-muted);">₦0</div>
@@ -206,18 +208,19 @@ const AI = (() => {
         return `
           <div class="plan-meal" draggable="true" data-didx="${dIdx}" data-mtype="${m}" style="cursor: grab; position:relative; ${usedStyle}">
             <div style="display:flex; justify-content:space-between; align-items:start;">
-              <div class="plan-meal-type">${mealEmojis[m] || ''} ${m}</div>
+              <div class="plan-meal-type">${mealLabels[m] || m.toUpperCase()}</div>
               <div style="display:flex; gap:4px; align-items:center;">
                 <label class="meal-check-label" style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:0.7rem; color:${isUsed ? 'var(--green)' : 'var(--text-muted)'};">
                   <input type="checkbox" class="meal-used-checkbox" data-iso="${isoDate}" data-mtype="${m}" data-cost="${mObj.cost}" data-item="${escapeHTML(mObj.item)}" ${isUsed ? 'checked' : ''} style="accent-color:var(--green); width:16px; height:16px;">
-                  ${isUsed ? '✅ Used' : 'Mark as used'}
+                  ${isUsed ? 'Used' : 'Mark as used'}
                 </label>
                 <button class="icon-btn delete-meal-btn" data-didx="${dIdx}" data-mtype="${m}" title="Remove Meal" style="width:24px;height:24px; border:none; background:transparent;"><i data-lucide="trash-2" style="width:14px;height:14px;color:var(--red);"></i></button>
               </div>
             </div>
             <div class="plan-meal-name" style="margin-top:2px; ${nameStyle}">
               <div>${escapeHTML(mObj.item)}</div>
-              ${mObj.cafeteria && mObj.cafeteria.trim() ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">📍 ${escapeHTML(mObj.cafeteria)}</div>` : ''}
+              ${mObj.breakdown && mObj.breakdown.trim() ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px; font-style:italic;">${escapeHTML(mObj.breakdown)}</div>` : ''}
+              ${mObj.cafeteria && mObj.cafeteria.trim() ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${escapeHTML(mObj.cafeteria)}</div>` : ''}
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 8px;">
               <div class="plan-meal-cost" style="${isFree ? 'color:var(--green);' : ''}${isUsed ? 'color:var(--green);' : ''}">
@@ -230,7 +233,7 @@ const AI = (() => {
       return `
         <div class="plan-day" data-didx="${dIdx}" ondragover="event.preventDefault();" style="transition: background 0.2s;">
           <div class="plan-day-header">
-            <span class="plan-day-name">📆 ${escapeHTML(dateLabel)}</span>
+            <span class="plan-day-name">${escapeHTML(dateLabel)}</span>
             <span class="plan-day-total">₦${Number(day.daily_total).toLocaleString()}</span>
           </div>
           <div class="plan-meals droppable-zone">${mealsHtml}</div>
@@ -256,7 +259,7 @@ const AI = (() => {
           // Mark as used and log the purchase
           log[iso][mType] = { used: true, cost, item };
           Budget.logPurchase(`${item} (${mType})`, cost);
-          showToast(`✅ ${item} marked as used — ₦${cost.toLocaleString()} deducted`, 'success');
+          showToast(`${item} marked as used — ₦${cost.toLocaleString()} deducted`, 'success');
         } else {
           // Unmark — remove from usage log and reverse the cost
           if (log[iso][mType]) {

@@ -36,6 +36,7 @@ const App = (() => {
     allowance: 0,
     savingsGoal: 0,
     miscExpenses: 0,
+    packPrice: 200,
     foodItems: [],
     spendingHistory: [],
     savedWeeklyPlan: null,
