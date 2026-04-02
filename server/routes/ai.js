@@ -61,7 +61,7 @@ MEAL COMBINATION RULE:
 - Nigerian students typically eat food combos like: "Jollof Rice + Fish", "Eba + Egusi Soup", "Fried Rice + Turkey + Plantain".
 - The "item" field should describe the full combo (e.g. "Jollof Rice + Fish").
 - The "cost" field should be the SUM of all items in the combo PLUS the pack fee (if cafeteria).
-- The "breakdown" field should show the math (e.g. "Rice ₦800 + Fish ₦600 + Pack ₦${packPrice}").
+- The "breakdown" field must show the detailed math in text format, like: Rice N800 + Fish N600 + Pack N200
 - It is okay to recommend a single item if that's all the budget allows, but prefer combos when possible.
 
 RULES:
@@ -74,7 +74,7 @@ ${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise with
 7. For "Portion" items, use the cheapest cafeteria price shown.
 8. Include the cafeteria name if available.${stapleStr}
 
-RESPOND ONLY with valid JSON matching this exact schema (no markdown, no explanation):
+RESPOND ONLY WITH VALID JSON matching this exact structure:
 {
   "summary": {
     "total_weekly_cost": 0,
@@ -82,15 +82,15 @@ RESPOND ONLY with valid JSON matching this exact schema (no markdown, no explana
     "projected_savings": 0,
     "health_score_out_of_10": 0,
     "recommended_meals_per_day": 3,
-    "meals_per_day_reason": "Short explanation based on budget."
+    "meals_per_day_reason": "string"
   },
-  "advice": "A short, encouraging 2-sentence summary.",
+  "advice": "string",
   "weekly_plan": [
     {
       "day": "Monday",
-      "breakfast": { "item": "Combo name or Skip", "cost": 0, "breakdown": "Item1 ₦X + Item2 ₦Y + Pack ₦${packPrice}", "cafeteria": "" },
-      "lunch": { "item": "Combo name or Skip", "cost": 0, "breakdown": "", "cafeteria": "" },
-      "dinner": { "item": "Combo name or Skip", "cost": 0, "breakdown": "", "cafeteria": "" },
+      "breakfast": { "item": "string", "cost": 0, "breakdown": "string", "cafeteria": "string" },
+      "lunch": { "item": "string", "cost": 0, "breakdown": "string", "cafeteria": "string" },
+      "dinner": { "item": "string", "cost": 0, "breakdown": "string", "cafeteria": "string" },
       "daily_total": 0
     }
   ]
