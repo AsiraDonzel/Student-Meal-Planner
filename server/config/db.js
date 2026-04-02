@@ -16,6 +16,7 @@ const connectDB = async () => {
 
         const conn = await mongoose.connect(process.env.MONGO_URI, {
             serverSelectionTimeoutMS: 30000, // Timeout after 30s to allow slow connections
+            family: 4 // Force IPv4 (fixes "secureConnect timed out" on Mobile Hotspots with broken IPv6 routing)
         });
 
         isConnected = true;
