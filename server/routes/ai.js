@@ -52,9 +52,10 @@ router.post('/recommend', protect, async (req, res) => {
 
 PACK FEE RULE:
 - Every meal bought from a cafeteria requires a pack/takeaway container that costs ₦${packPrice}.
-- The pack fee MUST be added to the total cost of every cafeteria meal.
+- Only apply ONE pack fee per meal, even if the meal contains multiple items together (e.g., Rice and Beef go in ONE pack).
+- The pack fee MUST be added to the total cost of every cafeteria meal once.
 - Staple items eaten at home (Garri, Cereal) do NOT need a pack, so no pack fee for those.
-- Example: If Jollof Rice costs ₦800, the real cost with pack is ₦${800 + packPrice}.
+- Example: 2 Portions of Jollof Rice (₦1600) + Beef (₦500), the real cost with ONE pack is ₦${1600 + 500 + packPrice}.
 
 MEAL COMBINATION RULE:
 - Meals should be REALISTIC COMBINATIONS of items, not just a single food alone.
@@ -73,10 +74,11 @@ RULES:
 ${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise with fun combos, but respect the budget.' : '2. Balance nutrition across the week. Analyze each food for its health value.'}
 3. Vary meals across the week — do NOT repeat the same combo every day.
 4. Every day MUST have exactly 3 slots: "breakfast", "lunch", "dinner".
-5. If the budget cannot afford a meal for a slot, set the item to "Skip" with cost 0 and breakdown "Budget too tight".
-6. Only use items from the provided menu (plus staple items below).
-7. For "Portion" items, assume standard price per portion and multiply by the number of portions you assign.
-8. Include the cafeteria name if available.${stapleStr}
+5. TIMING RULE: "Street Food" items (Suya, Akara, Plantain) are ONLY sold in the evening. You MUST ONLY schedule "Street Food" items for the "dinner" slot. Never suggest them for breakfast or lunch.
+6. If the budget cannot afford a meal for a slot, set the item to "Skip" with cost 0 and breakdown "Budget too tight".
+7. Only use items from the provided menu (plus staple items below).
+8. For "Portion" items, assume standard price per portion and multiply by the number of portions you assign.
+9. Include the cafeteria name if available.${stapleStr}
 
 CRITICAL INSTRUCTION: RESPOND ONLY WITH VALID JSON matching this exact structure. DO NOT OUTPUT MARKDOWN CODEBLOCKS. DO NOT OUTPUT ANY OTHER TEXT:
 {
