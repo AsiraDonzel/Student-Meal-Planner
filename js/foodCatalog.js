@@ -39,6 +39,34 @@ const FoodCatalog = (() => {
       { name: 'Ice Cream', price: 1500, unit: 'fixed price' },
       { name: 'Shawarma', price: 3000, unit: 'per wrap' },
     ],
+    'Street Food': [
+      { name: 'Large Suya', price: 800, unit: 'per stick' },
+      { name: 'Suya', price: 500, unit: 'per stick' },
+      { name: 'Coated Yam', price: 500, unit: 'per yam' },
+      { name: 'Large Fried Plantain', price: 1000, unit: 'per plantain' },
+      { name: 'Fried Plantain', price: 800, unit: 'per plantain' },
+      { name: 'Small Plantain', price: 100, unit: 'per plantain' },
+      { name: 'Sapa Yam', price: 1500, unit: 'fixed price' },
+      { name: 'Akara', price: 200, unit: 'per akara' },
+      { name: 'Bread', price: 1200, unit: 'per loaf' },
+      { name: 'Chicken Sauce', price: 500, unit: 'per spoon' },
+      { name: 'Beef', price: 500, unit: 'fixed price' },
+      { name: 'Kpommo', price: 500, unit: 'fixed price' }
+    ],
+    'CAF 1': [
+      { name: 'White Rice', price: 500, unit: 'per spoon' },
+      { name: 'Jollof Rice', price: 400, unit: 'per spoon' },
+      { name: 'Fried Rice', price: 500, unit: 'per spoon' },
+      { name: 'Jollof Spaghetti', price: 500, unit: 'per spoon' },
+      { name: 'Beans', price: 500, unit: 'per spoon' },
+      { name: 'Vegetable Rice', price: 600, unit: 'per spoon' },
+      { name: 'Ofada Rice', price: 550, unit: 'per spoon' },
+      { name: 'Ofada Sauce', price: 0, unit: 'free' },
+      { name: 'Beef', price: 500, unit: 'fixed price' },
+      { name: 'Fish', price: 500, unit: 'fixed price' },
+      { name: 'Big Moi-Moi', price: 1000, unit: 'fixed price' },
+      { name: 'Small Moi-Moi', price: 500, unit: 'fixed price' }
+    ]
   };
 
   function getCafeterias() {

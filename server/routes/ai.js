@@ -60,7 +60,10 @@ MEAL COMBINATION RULE:
 - Meals should be REALISTIC COMBINATIONS of items, not just a single food alone.
 - Nigerian students typically eat food combos like: "Jollof Rice + Fish", "Eba + Egusi Soup", "Fried Rice + Turkey + Plantain".
 - The "item" field should describe the full combo (e.g. "2 Portions of Jollof Rice + Fish").
-- QUANTITY RULE: For any food that is NOT a "fixed price" item (e.g. measured in Portions, Plates, or Wraps), NEVER recommend just 1 quantity unless the budget is extremely tight. Most students buy at least 2 portions/plates. (e.g., "2 Portions of Fried Rice" = N800 x 2 = N1600).
+- QUANTITY RULE: For any food that is NOT a "fixed price" item, NEVER recommend just 1 quantity unless the budget is extremely tight. 
+  - If unit is "per spoon" (e.g. Rice at CAF 1), a student needs AT LEAST 4 Spoons for a full meal! Calculate cost as Price x 4 minimum.
+  - If unit is "per stick" or "per piece" or "per plate" or "per portion", assume AT LEAST 2 quantities (e.g. 2 Sticks, 2 Portions).
+  - e.g., "4 Spoons of Jollof Rice" = N400 x 4 = N1600.
 - The "cost" field should be the SUM of all items in the combo PLUS the pack fee (if cafeteria).
 - The "breakdown" field must show the detailed math in text format, like: 2 Rice N1600 + Fish N600 + Pack N200
 - It is okay to recommend a single item if that's all the budget allows, but prefer combos when possible.
