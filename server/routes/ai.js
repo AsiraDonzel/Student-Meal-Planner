@@ -60,7 +60,7 @@ MEAL COMBINATION RULE:
 - Meals should be REALISTIC COMBINATIONS of items, not just a single food alone.
 - Nigerian students typically eat food combos like: "Jollof Rice + Fish", "Eba + Egusi Soup", "Fried Rice + Turkey + Plantain".
 - The "item" field should describe the full combo (e.g. "2 Portions of Jollof Rice + Fish").
-- PORTIONS RULE: For foods measured in 'Portions' (like Rice, Spaghetti), NEVER recommend just 1 portion unless the budget is extremely tight. Most students eat at least 2 portions. (e.g., "2 Portions of Fried Rice" = N800 x 2 = N1600).
+- QUANTITY RULE: For any food that is NOT a "fixed price" item (e.g. measured in Portions, Plates, or Wraps), NEVER recommend just 1 quantity unless the budget is extremely tight. Most students buy at least 2 portions/plates. (e.g., "2 Portions of Fried Rice" = N800 x 2 = N1600).
 - The "cost" field should be the SUM of all items in the combo PLUS the pack fee (if cafeteria).
 - The "breakdown" field must show the detailed math in text format, like: 2 Rice N1600 + Fish N600 + Pack N200
 - It is okay to recommend a single item if that's all the budget allows, but prefer combos when possible.
@@ -139,7 +139,32 @@ Please generate a 7-day meal plan with breakfast, lunch, and dinner for each day
             content = content.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '');
         }
 
-        res.status(200).json({ success: true, data: JSON.parse(content) });
+        let parsedData = JSON.parse(content);
+        
+        // --- LLM Math Correction ---
+        // LLMs are notoriously bad at basic arithmetic. We must recompute 
+        // the total weekly cost to ensure the UI metrics perfectly match the generated meals.
+        let actualTotal = 0;
+        if (parsedData.weekly_plan && Array.isArray(parsedData.weekly_plan)) {
+            parsedData.weekly_plan.forEach(day => {
+                let dailyTotal = 0;
+                ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+                    if (day[meal] && typeof day[meal].cost === 'number') {
+                        dailyTotal += day[meal].cost;
+                    }
+                });
+                day.daily_total = dailyTotal;
+                actualTotal += dailyTotal;
+            });
+        }
+        
+        // Safely map it to the summary metric
+        if (!parsedData.summary) parsedData.summary = {};
+        parsedData.summary.total_weekly_cost = actualTotal;
+        parsedData.summary.projected_monthly_cost = actualTotal * (30 / 7);
+        parsedData.summary.projected_savings = spendingBudget - parsedData.summary.projected_monthly_cost;
+
+        res.status(200).json({ success: true, data: parsedData });
 
     } catch (error) {
         console.error('AI Proxy Error:', error);
