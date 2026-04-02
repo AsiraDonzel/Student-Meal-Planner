@@ -16,6 +16,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// DB Connection Check Middleware
+const mongoose = require('mongoose');
+app.use('/api', (req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(503).json({ 
+            success: false, 
+            error: 'Database connection is not ready. Please verify your MongoDB Atlas IP Whitelist at https://www.mongodb.com/docs/atlas/security-whitelist/ or check your internet.' 
+        });
+    }
+    next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/food', require('./routes/food'));
