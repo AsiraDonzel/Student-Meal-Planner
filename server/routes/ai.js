@@ -52,10 +52,9 @@ router.post('/recommend', protect, async (req, res) => {
 
 PACK FEE RULE:
 - Every meal bought from a cafeteria requires a pack/takeaway container that costs ₦${packPrice}.
-- Only apply ONE pack fee per meal, even if the meal contains multiple items together (e.g., Rice and Beef go in ONE pack).
-- The pack fee MUST be added to the total cost of every cafeteria meal once.
+- ONE pack per meal: If a meal has multiple items (e.g., 2 Rice + 1 Fish), they go in the SAME pack. Add ₦${packPrice} ONLY ONCE per meal slot.
 - Staple items eaten at home (Garri, Cereal) do NOT need a pack, so no pack fee for those.
-- Example: 2 Portions of Jollof Rice (₦1600) + Beef (₦500), the real cost with ONE pack is ₦${1600 + 500 + packPrice}.
+- Example: If Jollof Rice costs ₦800, the real cost with pack is ₦${800 + packPrice}.
 
 MEAL COMBINATION RULE:
 - Meals should be REALISTIC COMBINATIONS of items, not just a single food alone.
@@ -65,16 +64,16 @@ MEAL COMBINATION RULE:
   - If unit is "per spoon" (e.g. Rice at CAF 1), a student needs AT LEAST 4 Spoons for a full meal! Calculate cost as Price x 4 minimum.
   - If unit is "per stick" or "per piece" or "per plate" or "per portion", assume AT LEAST 2 quantities (e.g. 2 Sticks, 2 Portions).
   - e.g., "4 Spoons of Jollof Rice" = N400 x 4 = N1600.
-- The "cost" field should be the SUM of all items in the combo PLUS the pack fee (if cafeteria).
+- The "cost" field should be the SUM of all items in the combo PLUS EXACTLY ONE pack fee (if cafeteria).
 - The "breakdown" field must show the detailed math in text format, like: 2 Rice N1600 + Fish N600 + Pack N200
 - It is okay to recommend a single item if that's all the budget allows, but prefer combos when possible.
 
 RULES:
 1. Total weekly cost MUST NOT exceed ₦${Math.round(weeklyBudget).toLocaleString()}.
-${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise with fun combos, but respect the budget.' : '2. Balance nutrition across the week. Analyze each food for its health value.'}
+2. ${mode === 'surprise' ? 'GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise with fun combos, but respect the budget.' : 'Balance nutrition across the week. Analyze each food for its health value.'}
 3. Vary meals across the week — do NOT repeat the same combo every day.
 4. Every day MUST have exactly 3 slots: "breakfast", "lunch", "dinner".
-5. TIMING RULE: "Street Food" items (Suya, Akara, Plantain) are ONLY sold in the evening. You MUST ONLY schedule "Street Food" items for the "dinner" slot. Never suggest them for breakfast or lunch.
+5. STREET FOOD RULE: Items from the "Street Food" category (Suya, Akara, Bread, etc.) are ONLY sold in the evening. ONLY schedule them for "dinner".
 6. If the budget cannot afford a meal for a slot, set the item to "Skip" with cost 0 and breakdown "Budget too tight".
 7. Only use items from the provided menu (plus staple items below).
 8. For "Portion" items, assume standard price per portion and multiply by the number of portions you assign.
