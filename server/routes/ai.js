@@ -59,9 +59,10 @@ PACK FEE RULE:
 MEAL COMBINATION RULE:
 - Meals should be REALISTIC COMBINATIONS of items, not just a single food alone.
 - Nigerian students typically eat food combos like: "Jollof Rice + Fish", "Eba + Egusi Soup", "Fried Rice + Turkey + Plantain".
-- The "item" field should describe the full combo (e.g. "Jollof Rice + Fish").
+- The "item" field should describe the full combo (e.g. "2 Portions of Jollof Rice + Fish").
+- PORTIONS RULE: For foods measured in 'Portions' (like Rice, Spaghetti), NEVER recommend just 1 portion unless the budget is extremely tight. Most students eat at least 2 portions. (e.g., "2 Portions of Fried Rice" = N800 x 2 = N1600).
 - The "cost" field should be the SUM of all items in the combo PLUS the pack fee (if cafeteria).
-- The "breakdown" field must show the detailed math in text format, like: Rice N800 + Fish N600 + Pack N200
+- The "breakdown" field must show the detailed math in text format, like: 2 Rice N1600 + Fish N600 + Pack N200
 - It is okay to recommend a single item if that's all the budget allows, but prefer combos when possible.
 
 RULES:
@@ -71,10 +72,10 @@ ${mode === 'surprise' ? '2. GENERATE A CREATIVE, RANDOM MEAL PLAN. Surprise with
 4. Every day MUST have exactly 3 slots: "breakfast", "lunch", "dinner".
 5. If the budget cannot afford a meal for a slot, set the item to "Skip" with cost 0 and breakdown "Budget too tight".
 6. Only use items from the provided menu (plus staple items below).
-7. For "Portion" items, use the cheapest cafeteria price shown.
+7. For "Portion" items, assume standard price per portion and multiply by the number of portions you assign.
 8. Include the cafeteria name if available.${stapleStr}
 
-RESPOND ONLY WITH VALID JSON matching this exact structure:
+CRITICAL INSTRUCTION: RESPOND ONLY WITH VALID JSON matching this exact structure. DO NOT OUTPUT MARKDOWN CODEBLOCKS. DO NOT OUTPUT ANY OTHER TEXT:
 {
   "summary": {
     "total_weekly_cost": 0,
@@ -113,8 +114,7 @@ Please generate a 7-day meal plan with breakfast, lunch, and dinner for each day
                 { role: 'user',   content: userPrompt },
             ],
             temperature: 0.7,
-            max_tokens: 2048,
-            response_format: { type: "json_object" },
+            max_tokens: 2048
         };
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -132,7 +132,12 @@ Please generate a 7-day meal plan with breakfast, lunch, and dinner for each day
         }
 
         const data = await response.json();
-        const content = data.choices[0].message.content;
+        let content = data.choices[0].message.content.trim();
+        
+        // Strip markdown backticks if the model hallucinated them
+        if (content.startsWith('```')) {
+            content = content.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '');
+        }
 
         res.status(200).json({ success: true, data: JSON.parse(content) });
 
