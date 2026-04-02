@@ -107,7 +107,7 @@ ${foodListStr}
 Please generate a 7-day meal plan with breakfast, lunch, and dinner for each day. Combine items into realistic meal combos and include the pack fee in every cafeteria meal cost.`;
 
         const requestBody = {
-            model: 'openai/gpt-oss-120b',
+            model: 'llama-3.3-70b-versatile',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user',   content: userPrompt },
