@@ -50,23 +50,43 @@ const App = (() => {
     Theme.init();
     if (window.AudioSystem) AudioSystem.init();
     
-    // 2. Security Check & Unlock Flow
+    // 2. Start Authentication Flow first
+    Auth.init();
+  }
+
+  async function loginInit() {
+    document.getElementById('auth-container').classList.add('hidden');
+
+    // Attempt auto-unlock without asking for password if within 1 hour
+    if (Security.isSetup()) {
+      const autoSuccess = await Security.autoUnlock();
+      if (autoSuccess) {
+        return finishLoginInit();
+      }
+    }
+
+    // Show Lock Screen overlay
     const lockScreen = document.getElementById('app-lock-screen');
     const lockForm   = document.getElementById('master-password-form');
+    let newLockForm  = lockForm.cloneNode(true);
+    lockForm.parentNode.replaceChild(newLockForm, lockForm);
+
     const lockTitle  = document.getElementById('lock-title');
     const lockSub    = document.getElementById('lock-subtitle');
     const setupInfo  = document.getElementById('master-setup-info');
     const unlockText = document.getElementById('master-unlock-text');
 
+    lockScreen.classList.remove('hidden');
+    document.getElementById('master-password-input').value = '';
+
     if (!Security.isSetup()) {
-      // First run or reset: Show setup modal
-      lockScreen.classList.remove('hidden');
+      // Setup Phase
       lockTitle.textContent = "Secure Your Planner";
       lockSub.textContent = "Set a master password to encrypt your data";
       setupInfo.classList.remove('hidden');
       unlockText.textContent = "Complete Setup";
       
-      lockForm.addEventListener('submit', async (e) => {
+      newLockForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pass = document.getElementById('master-password-input').value;
         if (pass.length < 4) {
@@ -74,7 +94,6 @@ const App = (() => {
           return;
         }
 
-        // Migrate legacy data if any
         const legacy = Security.getLegacyData();
         if (legacy) {
           appState = { ...appState, ...legacy };
@@ -87,28 +106,25 @@ const App = (() => {
         
         lockScreen.classList.add('hidden');
         showToast('Secure vault created!', 'success');
-        Auth.init();
+        finishLoginInit();
       });
     } else {
-      // Vault exists: Block until unlocked
-      lockScreen.classList.remove('hidden');
-      lockForm.addEventListener('submit', async (e) => {
+      // Unlock Phase
+      lockTitle.textContent = "Vault Locked";
+      lockSub.textContent = "Enter your master password to decrypt your data";
+      setupInfo.classList.add('hidden');
+      unlockText.textContent = "Unlock Vault";
+
+      newLockForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pass = document.getElementById('master-password-input').value;
         const success = await Security.unlock(pass);
         
         if (success) {
-          const loaded = await Security.loadAppState();
-          if (loaded) appState = loaded;
-          
           lockScreen.classList.add('hidden');
           showToast('Vault unlocked!', 'success');
           if(window.AudioSystem) window.AudioSystem.playSound('click');
-          
-          // Apply Theme/Sound from state if needed
-          if (appState.theme) Theme.apply(appState.theme);
-          
-          Auth.init();
+          finishLoginInit();
         } else {
           const err = document.getElementById('master-lock-error');
           err.classList.remove('hidden');
@@ -118,9 +134,13 @@ const App = (() => {
     }
   }
 
-  function loginInit() {
-    document.getElementById('auth-container').classList.add('hidden');
+  async function finishLoginInit() {
+    const loaded = await Security.loadAppState();
+    if (loaded) appState = loaded;
+    if (appState.theme) Theme.apply(appState.theme);
+
     document.getElementById('app-container').classList.remove('hidden');
+
 
     // Init sub-modules
     Budget.init();
@@ -170,6 +190,9 @@ const App = (() => {
   function logoutInit() {
     document.getElementById('auth-container').classList.remove('hidden');
     document.getElementById('app-container').classList.add('hidden');
+    
+    // Clear session-level unlock tokens
+    sessionStorage.removeItem('smp_session');
     
     // Clear any sensitive initials if needed
     const navInitial = document.getElementById('nav-profile-initial');

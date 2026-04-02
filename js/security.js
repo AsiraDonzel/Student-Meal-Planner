@@ -94,6 +94,9 @@ const Security = (() => {
     const verifyToken = await encrypt("VERIFIED");
     localStorage.setItem(VERIFY_KEY, verifyToken);
 
+    // Save session unlock token for 1 hour
+    sessionStorage.setItem('smp_session', JSON.stringify({ pass: password, time: Date.now() }));
+
     return true;
   }
 
@@ -118,12 +121,39 @@ const Security = (() => {
       const result = await decrypt(verifyToken);
       
       if (result === "VERIFIED") {
+        sessionStorage.setItem('smp_session', JSON.stringify({ pass: password, time: Date.now() }));
         return true; // masterKey is already set to potentialKey
       } else {
         masterKey = prevKey;
         return false;
       }
     } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Attempts to automatically unlock using the session token if within 1 hour.
+   */
+  async function autoUnlock() {
+    try {
+      const sessionData = sessionStorage.getItem('smp_session');
+      if (!sessionData) return false;
+      const { pass, time } = JSON.parse(sessionData);
+      
+      // Check 1-hour expiration
+      if (Date.now() - time > 1000 * 60 * 60) {
+        sessionStorage.removeItem('smp_session');
+        return false;
+      }
+
+      // Refresh the timestamp and attempt unlock
+      const success = await unlock(pass);
+      if (success) {
+        sessionStorage.setItem('smp_session', JSON.stringify({ pass, time: Date.now() }));
+      }
+      return success;
+    } catch(err) {
       return false;
     }
   }
@@ -191,14 +221,22 @@ const Security = (() => {
     legacyKeys.forEach(k => localStorage.removeItem(k));
   }
 
-  function isSetup() {
-    return !!localStorage.getItem(SALT_KEY);
-  }
-
-  function resetAll() {
+  function resetVault() {
     localStorage.clear();
+    sessionStorage.clear();
     location.reload();
   }
 
-  return { setup, unlock, saveAppState, loadAppState, getLegacyData, clearLegacyData, isSetup, resetAll };
+  return {
+    isSetup: () => !!localStorage.getItem(SALT_KEY),
+    setup,
+    unlock,
+    autoUnlock,
+    saveAppState,
+    loadAppState,
+    getLegacyData,
+    clearLegacyData,
+    isUnlocked: () => masterKey !== null,
+    resetVault
+  };
 })();

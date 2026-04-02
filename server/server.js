@@ -5,7 +5,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 
 // Load env variables
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Connect to database
 connectDB();
