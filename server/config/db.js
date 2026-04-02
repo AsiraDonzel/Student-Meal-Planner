@@ -6,7 +6,7 @@ let isConnected = false;
 const connectDB = async () => {
     try {
         if (!process.env.MONGO_URI) {
-            console.error('❌ MONGO_URI is not set in environment variables.');
+            console.error('MONGO_URI is not set in environment variables.');
             return;
         }
 
@@ -20,11 +20,11 @@ const connectDB = async () => {
         });
 
         isConnected = true;
-        console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        console.error(`❌ MongoDB Error: ${error.message}`);
+        console.error(`MongoDB Error: ${error.message}`);
         if(error.message.includes('timed out')) {
-            console.error(`💡 HINT: Are you sure your current IP address is whitelisted in MongoDB Atlas? Check here: https://www.mongodb.com/docs/atlas/security-whitelist/`);
+            console.error(`HINT: Are you sure your current IP address is whitelisted in MongoDB Atlas? Check here: https://www.mongodb.com/docs/atlas/security-whitelist/`);
         }
         // Do not use process.exit(1) in serverless as it kills the environment
     }
